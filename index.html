@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Game</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Roboto', sans-serif; /* Gunakan font yang umum di Android */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5; /* Warna latar belakang lembut */
+            color: #333;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            text-align: center;
+            width: 90%; /* Responsif untuk lebar */
+            max-width: 450px; /* Batas lebar seperti layar ponsel */
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #4CAF50; /* Warna hijau khas Android */
+            margin-bottom: 5px;
+            font-size: 2.2em;
+        }
+
+        h2 {
+            color: #666;
+            margin-top: 0;
+            font-size: 1.2em;
+            font-weight: normal;
+        }
+
+        .game-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            background-color: #e8f5e9; /* Latar belakang kartu yang lembut */
+            border-radius: 12px;
+            padding: 20px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+
+        .game-card:hover {
+            background-color: #dcedc8;
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-card.selected {
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        .game-card .emoji {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .game-card h3 {
+            margin: 0;
+            color: #388e3c;
+            font-size: 1.1em;
+        }
+
+        #playNowButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 30px; /* Tombol bulat */
+            padding: 15px 30px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 80%;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #playNowButton:hover {
+            background-color: #388e3c;
+        }
+
+        #game-area {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            width: 90%;
+            max-width: 450px;
+            box-sizing: border-box;
+            margin-top: 20px;
+            display: none; /* Sembunyikan secara default */
+            text-align: center;
+            position: relative; /* Untuk tombol kembali */
+        }
+
+        /* --- Puzzle Game Specific Styles --- */
+        #puzzle-board {
+            display: grid;
+            width: 300px; /* Lebar papan puzzle */
+            height: 300px; /* Tinggi papan puzzle */
+            margin: 20px auto;
+            border: 2px solid #ddd;
+            background-color: #eee;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden; /* Penting untuk clipping gambar */
+        }
+
+        .puzzle-tile {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, background-color 0.2s;
+            background-size: 300px 300px; /* Pastikan ini sesuai dengan ukuran #puzzle-board */
+            background-repeat: no-repeat;
+        }
+
+        .puzzle-tile.empty {
+            background-color: #f0f0f0;
+            cursor: default;
+            background-image: none !important; /* Pastikan tidak ada gambar di tile kosong */
+        }
+
+        .puzzle-tile:not(.empty):hover {
+            transform: scale(1.05);
+            background-color: #e0e0e0;
+        }
+
+        #shuffleButton {
+            background-color: #03A9F4;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        #shuffleButton:hover {
+            background-color: #0288D1;
+        }
+
+        #puzzle-timer {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #555;
+        }
+
+
+        /* --- Tebak Kata Specific Styles --- */
+        #word-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin-bottom: 25px;
+            color: #333;
+            min-height: 50px;
+        }
+
+        #keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .key {
+            background-color: #9CCC65;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            min-width: 45px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .key:hover:not(:disabled) {
+            background-color: #8BC34A;
+            transform: translateY(-2px);
+        }
+
+        .key:disabled {
+            background-color: #BDBDBD;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #attempts-left {
+            font-weight: bold;
+            color: #D32F2F;
+        }
+
+        #game-message {
+            margin-top: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #4CAF50;
+            min-height: 25px; /* Menghindari layout shift */
+        }
+
+        #newGameButton {
+            background-color: #FFC107;
+            color: #333;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        #newGameButton:hover {
+            background-color: #FFB300;
+        }
+
+        /* --- Ingat Irama Specific Styles --- */
+        #rhythm-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            min-height: 30px;
+        }
+
+        #rhythm-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .rhythm-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid transparent; /* Untuk efek 'aktif' */
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease-out;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .rhythm-button.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0,188,212,0.8);
+        }
+
+        .rhythm-button:nth-child(1) { background-color: #FFC107; } /* Kuning */
+        .rhythm-button:nth-child(2) { background-color: #F44336; } /* Merah */
+        .rhythm-button:nth-child(3) { background-color: #4CAF50; } /* Hijau */
+        .rhythm-button:nth-child(4) { background-color: #2196F3; } /* Biru */
+
+        .rhythm-button:hover {
+            opacity: 0.9;
+        }
+        .rhythm-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #startRhythmButton, #submitRhythmButton {
+            background-color: #673AB7; /* Ungu */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        #submitRhythmButton {
+            background-color: #00BCD4; /* Cyan */
+            display: none;
+        }
+        #startRhythmButton:hover, #submitRhythmButton:hover {
+            background-color: #512DA8;
+        }
+
+        #current-level {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        /* --- Statistik Specific Styles --- */
+        #stats-content {
+            text-align: left;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        #stats-content h3 {
+            color: #4CAF50;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        #stats-content p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        /* --- Back to Menu Button (General) --- */
+        .back-to-menu {
+            background-color: #9E9E9E; /* Abu-abu */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.3s;
+        }
+        .back-to-menu:hover {
+            background-color: #757575;
+        }
+
+        /* Media Queries untuk responsivitas */
+        @media (max-width: 600px) {
+            .game-menu {
+                grid-template-columns: 1fr 1fr; /* 2 kolom untuk layar kecil */
+            }
+            .puzzle-tile {
+                font-size: 1.5em;
+            }
+            #puzzle-board {
+                width: 270px;
+                height: 270px;
+            }
+            .key {
+                padding: 10px 15px;
+                font-size: 1.1em;
+                min-width: 40px;
+            }
+            .rhythm-button {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-menu">
+        <h1>🧠 Brain Game</h1>
+        <h2>Latihan Kognitif</h2>
+
+        <div class="game-menu">
+            <div class="game-card" data-game="puzzle">
+                <span class="emoji">🧩</span>
+                <h3>Puzzle Gambar</h3>
+            </div>
+            <div class="game-card" data-game="tebak-kata">
+                <span class="emoji">🔤</span>
+                <h3>Tebak Kata</h3>
+            </div>
+            <div class="game-card" data-game="ingat-irama">
+                <span class="emoji">🎵</span>
+                <h3>Ingat Irama</h3>
+            </div>
+            <div class="game-card" data-game="statistik">
+                <span class="emoji">⭐</span>
+                <h3>Statistik Perkembangan</h3>
+            </div>
+        </div>
+
+        <button id="playNowButton">➡️ Main Sekarang</button>
+    </div>
+
+    <div id="game-area">
+    </div>
+
+    <script>
+        // --- IndexedDB Manager (db_manager.js equivalent) ---
+        const DB_NAME = 'BrainGameDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'gameStats';
+
+        let db;
+
+        function openDb() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'gameName' });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB opened successfully');
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        async function saveData(gameName, data) {
+            if (!db) await openDb();
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put({ gameName, ...data });
+
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => {
+                    console.log(`Data for ${gameName} saved.`);
+                    resolve();
+                };
+                request.onerror = (event) => {
+                    console.error(`Error saving data for ${gameName}:`, event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        async function getData(gameName) {
+            if (!db) await openDb();
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(gameName);
+
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => {
+                    console.log(`Data for ${gameName} retrieved.`);
+                    resolve(request.result);
+                };
+                request.onerror = (event) => {
+                    console.error(`Error retrieving data for ${gameName}:`, event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Inisialisasi DB saat script dimuat
+        openDb().catch(error => console.error("Failed to open DB on load:", error));
+
+
+        // --- Main Game Logic (main.js equivalent) ---
+        let selectedGame = null;
+        const gameCards = document.querySelectorAll('.game-card');
+        const playNowButton = document.getElementById('playNowButton');
+        const gameArea = document.getElementById('game-area');
+        const mainMenu = document.getElementById('main-menu'); // Tambahkan ID untuk menu utama
+
+        gameCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Hapus kelas 'selected' dari semua kartu
+                gameCards.forEach(c => c.classList.remove('selected'));
+                // Tambahkan kelas 'selected' ke kartu yang diklik
+                card.classList.add('selected');
+                selectedGame = card.dataset.game;
+                console.log('Selected Game:', selectedGame);
+            });
+        });
+
+        playNowButton.addEventListener('click', () => {
+            if (selectedGame) {
+                mainMenu.style.display = 'none'; // Sembunyikan menu utama
+                gameArea.style.display = 'block'; // Tampilkan area game
+                loadGame(selectedGame);
+            } else {
+                alert('Pilih salah satu game terlebih dahulu!');
+            }
+        });
+
+        function returnToMainMenu() {
+            gameArea.style.display = 'none';
+            mainMenu.style.display = 'block';
+            selectedGame = null; // Reset pilihan game
+            gameCards.forEach(c => c.classList.remove('selected')); // Hapus highlight pilihan
+        }
+
+        function loadGame(game) {
+            gameArea.innerHTML = ''; // Bersihkan konten area game sebelumnya
+
+            switch (game) {
+                case 'puzzle':
+                    displayPuzzleGame(); // Fungsi ini akan didefinisikan di bawah
+                    break;
+                case 'tebak-kata':
+                    displayTebakKataGame(); // Fungsi ini akan didefinisikan di bawah
+                    break;
+                case 'ingat-irama':
+                    displayIngatIramaGame(); // Fungsi ini akan didefinisikan di bawah
+                    break;
+                case 'statistik':
+                    displayStatistics(); // Fungsi ini akan didefinisikan di bawah
+                    break;
+                default:
+                    gameArea.innerHTML = '<p>Game tidak ditemukan.</p>';
+                    break;
+            }
+        }
+
+        // Fungsi untuk menampilkan statistik
+        async function displayStatistics() {
+            gameArea.innerHTML = '<h2>⭐ Statistik Perkembangan</h2><div id="stats-content"></div><button class="back-to-menu">Kembali ke Menu</button>';
+            const statsContent = document.getElementById('stats-content');
+
+            // Ambil data dari IndexedDB, gunakan nilai default jika belum ada
+            const puzzleStats = await getData('puzzle') || { lastPlayed: 'Belum pernah', bestTime: Infinity };
+            const tebakKataStats = await getData('tebak-kata') || { lastPlayed: 'Belum pernah', highScore: 0, gamesPlayed: 0, wins: 0 };
+            const ingatIramaStats = await getData('ingat-irama') || { lastPlayed: 'Belum pernah', highLevel: 0 };
+
+            statsContent.innerHTML = `
+                <h3>Puzzle Gambar:</h3>
+                <p>Terakhir Dimainkan: ${puzzleStats.lastPlayed}</p>
+                <p>Waktu Terbaik: ${puzzleStats.bestTime !== Infinity ? `${puzzleStats.bestTime} detik` : 'N/A'}</p>
+
+                <h3>Tebak Kata:</h3>
+                <p>Terakhir Dimainkan: ${tebakKataStats.lastPlayed}</p>
+                <p>Skor Tertinggi: ${tebakKataStats.highScore}</p>
+                <p>Game Dimainkan: ${tebakKataStats.gamesPlayed}</p>
+                <p>Menang: ${tebakKataStats.wins}</p>
+
+                <h3>Ingat Irama:</h3>
+                <p>Terakhir Dimainkan: ${ingatIramaStats.lastPlayed}</p>
+                <p>Level Tertinggi: ${ingatIramaStats.highLevel}</p>
+            `;
+
+            document.querySelector('.back-to-menu').addEventListener('click', returnToMainMenu);
+        }
+
+        // --- Puzzle Game (puzzle.js equivalent) ---
+        function displayPuzzleGame() {
+            gameArea.innerHTML = `
+                <h2>🧩 Puzzle Gambar</h2>
+                <div id="puzzle-board"></div>
+                <button id="shuffleButton">Acak Puzzle</button>
+                <p>Waktu: <span id="puzzle-timer">00:00</span></p>
+                <button class="back-to-menu">Kembali ke Menu</button>
+            `;
+
+            const puzzleBoard = document.getElementById('puzzle-board');
+            const shuffleButton = document.getElementById('shuffleButton');
+            const puzzleTimer = document.getElementById('puzzle-timer');
+            const backToMenuButton = document.querySelector('.back-to-menu');
+
+            const imageUrl = 'https://picsum.photos/300/300?random=1';
+            const gridSize = 3; // 3x3 puzzle
+            let tiles = [];
+            let emptyTileIndex = gridSize * gridSize - 1;
+            let timerInterval;
+            let startTime;
+
+            function initializePuzzle() {
+                puzzleBoard.innerHTML = '';
+                tiles = [];
+                const tileSizePx = 300 / gridSize;
+
+                puzzleBoard.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+                puzzleBoard.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+
+                for (let i = 0; i < gridSize * gridSize; i++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('puzzle-tile');
+                    if (i === emptyTileIndex) {
+                        tile.classList.add('empty');
+                    } else {
+                        const row = Math.floor(i / gridSize);
+                        const col = i % gridSize;
+                        tile.style.backgroundImage = `url(${imageUrl})`;
+                        tile.style.backgroundPosition = `-${col * tileSizePx}px -${row * tileSizePx}px`;
+                    }
+                    tile.dataset.originalIndex = i;
+                    tile.dataset.currentIndex = i;
+                    tiles.push(tile);
+                    puzzleBoard.appendChild(tile);
+                }
+                addTileEventListeners();
+                resetTimer();
+            }
+
+            function addTileEventListeners() {
+                tiles.forEach(tile => {
+                    tile.addEventListener('click', handleTileClick);
+                });
+            }
+
+            function handleTileClick(event) {
+                const clickedTile = event.target;
+                const clickedIndex = parseInt(clickedTile.dataset.currentIndex);
+
+                const emptyTile = tiles.find(t => t.classList.contains('empty'));
+                const emptyIndex = parseInt(emptyTile.dataset.currentIndex);
+
+                const emptyRow = Math.floor(emptyIndex / gridSize);
+                const emptyCol = emptyIndex % gridSize;
+                const clickedRow = Math.floor(clickedIndex / gridSize);
+                const clickedCol = clickedIndex % gridSize;
+
+                const isAdjacent = (Math.abs(emptyRow - clickedRow) === 1 && emptyCol === clickedCol) ||
+                                 (Math.abs(emptyCol - clickedCol) === 1 && emptyRow === clickedRow);
+
+                if (isAdjacent) {
+                    [tiles[clickedIndex], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[clickedIndex]];
+
+                    puzzleBoard.innerHTML = '';
+                    tiles.forEach((tile, index) => {
+                        puzzleBoard.appendChild(tile);
+                        tile.dataset.currentIndex = index;
+                        if (tile.classList.contains('empty')) {
+                            emptyTileIndex = index;
+                        }
+                    });
+
+                    if (!startTime) {
+                        startTimer();
+                    }
+
+                    if (checkWin()) {
+                        clearInterval(timerInterval);
+                        const endTime = Date.now();
+                        const totalTime = Math.floor((endTime - startTime) / 1000);
+                        alert(`Selamat! Anda memecahkan puzzle dalam ${totalTime} detik!`);
+                        savePuzzleStats(totalTime);
+                    }
+                }
+            }
+
+            function shuffleTiles() {
+                const nonEmptyTiles = tiles.filter(tile => !tile.classList.contains('empty'));
+                const emptyTile = tiles.find(tile => tile.classList.contains('empty'));
+
+                for (let i = nonEmptyTiles.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nonEmptyTiles[i], nonEmptyTiles[j]] = [nonEmptyTiles[j], nonEmptyTiles[i]];
+                }
+
+                let shuffledFullTiles = [];
+                let nonEmptyCounter = 0;
+                for (let i = 0; i < gridSize * gridSize; i++) {
+                    if (i === emptyTileIndex) {
+                        shuffledFullTiles[i] = emptyTile;
+                    } else {
+                        shuffledFullTiles[i] = nonEmptyTiles[nonEmptyCounter++];
+                    }
+                }
+                tiles = shuffledFullTiles;
+
+                let solvable = false;
+                while (!solvable) {
+                    let inversions = 0;
+                    for (let i = 0; i < tiles.length - 1; i++) {
+                        for (let j = i + 1; j < tiles.length; j++) {
+                            if (!tiles[i].classList.contains('empty') && !tiles[j].classList.contains('empty') &&
+                                parseInt(tiles[i].dataset.originalIndex) > parseInt(tiles[j].dataset.originalIndex)) {
+                                inversions++;
+                            }
+                        }
+                    }
+
+                    if (gridSize % 2 !== 0) {
+                        solvable = (inversions % 2 === 0);
+                    } else {
+                        solvable = (inversions % 2 === 0);
+                    }
+
+                    if (!solvable) {
+                        let tileIndex1, tileIndex2;
+                        do {
+                            tileIndex1 = Math.floor(Math.random() * tiles.length);
+                            tileIndex2 = Math.floor(Math.random() * tiles.length);
+                        } while (tileIndex1 === emptyTileIndex || tileIndex2 === emptyTileIndex || tileIndex1 === tileIndex2);
+
+                        [tiles[tileIndex1], tiles[tileIndex2]] = [tiles[tileIndex2], tiles[tileIndex1]];
+                    }
+                }
+                
+                puzzleBoard.innerHTML = '';
+                tiles.forEach((tile, index) => {
+                    puzzleBoard.appendChild(tile);
+                    tile.dataset.currentIndex = index;
+                    if (tile.classList.contains('empty')) {
+                        emptyTileIndex = index;
+                    }
+                });
+                
+                resetTimer();
+                startTime = null;
+            }
+
+            function checkWin() {
+                for (let i = 0; i < tiles.length; i++) {
+                    if (parseInt(tiles[i].dataset.originalIndex) !== i) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function startTimer() {
+                clearInterval(timerInterval);
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                    const minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+                    const seconds = String(elapsedTime % 60).padStart(2, '0');
+                    puzzleTimer.textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+
+            function resetTimer() {
+                clearInterval(timerInterval);
+                puzzleTimer.textContent = '00:00';
+                startTime = null;
+            }
+
+            async function savePuzzleStats(time) {
+                const existingStats = await getData('puzzle');
+                let bestTime = existingStats ? (existingStats.bestTime || Infinity) : Infinity;
+
+                if (time < bestTime) {
+                    bestTime = time;
+                }
+
+                await saveData('puzzle', {
+                    lastPlayed: new Date().toLocaleString(),
+                    bestTime: bestTime
+                });
+            }
+
+            // Event Listeners
+            shuffleButton.addEventListener('click', shuffleTiles);
+            backToMenuButton.addEventListener('click', returnToMainMenu); // Menggunakan fungsi global
+            
+            initializePuzzle();
+        }
+
+        // --- Tebak Kata Game (tebak_kata.js equivalent) ---
+        function displayTebakKataGame() {
+            gameArea.innerHTML = `
+                <h2>🔤 Tebak Kata</h2>
+                <div id="word-display"></div>
+                <div id="keyboard"></div>
+                <p>Kesempatan: <span id="attempts-left">6</span></p>
+                <p>Pesan: <span id="game-message"></span></p>
+                <button id="newGameButton">Game Baru</button>
+                <button class="back-to-menu">Kembali ke Menu</button>
+            `;
+
+            const words = [
+                "AYAH", "IBU", "KAKEK", "NENEK", "RUMAH", "MAKAN", "MINUM", "TIDUR", "MANDI", "SAYUR",
+                "BUAH", "NASI", "GULA", "KOPI", "TEH", "PAGI", "SIANG", "MALAM", "SEHAT", "SENYUM",
+                "BAHAGIA", "CERIA", "CINTA", "DAMAI", "SUKSES", "HIDUP", "AIR", "TANAH", "LANGIT", "BUMI"
+            ];
+            let currentWord = '';
+            let guessedWord = [];
+            let attempts = 6;
+            let guessedLetters = [];
+            let score = 0;
+
+            const wordDisplay = document.getElementById('word-display');
+            const keyboard = document.getElementById('keyboard');
+            const attemptsLeft = document.getElementById('attempts-left');
+            const gameMessage = document.getElementById('game-message');
+            const newGameButton = document.getElementById('newGameButton');
+            const backToMenuButton = document.querySelector('.back-to-menu');
+
+            function initializeGame() {
+                currentWord = words[Math.floor(Math.random() * words.length)];
+                guessedWord = Array(currentWord.length).fill('_');
+                attempts = 6;
+                guessedLetters = [];
+                updateDisplay();
+                createKeyboard();
+                gameMessage.textContent = '';
+                newGameButton.style.display = 'none';
+            }
+
+            function updateDisplay() {
+                wordDisplay.textContent = guessedWord.join(' ');
+                attemptsLeft.textContent = attempts;
+            }
+
+            function createKeyboard() {
+                keyboard.innerHTML = '';
+                for (let i = 65; i <= 90; i++) {
+                    const char = String.fromCharCode(i);
+                    const button = document.createElement('button');
+                    button.textContent = char;
+                    button.classList.add('key');
+                    button.addEventListener('click', () => handleGuess(char));
+                    keyboard.appendChild(button);
+                }
+            }
+
+            function handleGuess(letter) {
+                if (guessedLetters.includes(letter) || attempts === 0 || guessedWord.join('') === currentWord) {
+                    return;
+                }
+
+                guessedLetters.push(letter);
+                const clickedKey = Array.from(keyboard.children).find(btn => btn.textContent === letter);
+                if (clickedKey) {
+                    clickedKey.disabled = true;
+                }
+
+                if (currentWord.includes(letter)) {
+                    for (let i = 0; i < currentWord.length; i++) {
+                        if (currentWord[i] === letter) {
+                            guessedWord[i] = letter;
+                        }
+                    }
+                    gameMessage.textContent = 'Benar!';
+                } else {
+                    attempts--;
+                    gameMessage.textContent = 'Salah!';
+                }
+
+                updateDisplay();
+                checkGameStatus();
+            }
+
+            function checkGameStatus() {
+                if (guessedWord.join('') === currentWord) {
+                    gameMessage.textContent = 'Selamat, Anda menang!';
+                    score = attempts * 10;
+                    disableKeyboard();
+                    newGameButton.style.display = 'block';
+                    saveTebakKataStats(true, score);
+                } else if (attempts === 0) {
+                    gameMessage.textContent = `Anda kalah! Kata yang benar adalah: ${currentWord}`;
+                    disableKeyboard();
+                    newGameButton.style.display = 'block';
+                    saveTebakKataStats(false, 0);
+                }
+            }
+
+            function disableKeyboard() {
+                document.querySelectorAll('.key').forEach(button => {
+                    button.disabled = true;
+                });
+            }
+
+            async function saveTebakKataStats(win, currentScore) {
+                const existingStats = await getData('tebak-kata');
+                let highScore = existingStats ? (existingStats.highScore || 0) : 0;
+                let gamesPlayed = existingStats ? (existingStats.gamesPlayed || 0) : 0;
+                let wins = existingStats ? (existingStats.wins || 0) : 0;
+
+                gamesPlayed++;
+                if (win) {
+                    wins++;
+                    if (currentScore > highScore) {
+                        highScore = currentScore;
+                    }
+                }
+
+                await saveData('tebak-kata', {
+                    lastPlayed: new Date().toLocaleString(),
+                    highScore: highScore,
+                    gamesPlayed: gamesPlayed,
+                    wins: wins
+                });
+            }
+
+            // Event Listeners
+            newGameButton.addEventListener('click', initializeGame);
+            backToMenuButton.addEventListener('click', returnToMainMenu); // Menggunakan fungsi global
+
+            initializeGame();
+        }
+
+        // --- Ingat Irama Game (ingat_irama.js equivalent) ---
+        function displayIngatIramaGame() {
+            gameArea.innerHTML = `
+                <h2>🎵 Ingat Irama</h2>
+                <p id="current-level">Level: 1</p>
+                <div id="rhythm-display">Perhatikan urutan irama...</div>
+                <div id="rhythm-buttons">
+                    <button class="rhythm-button" data-sound="1">1</button>
+                    <button class="rhythm-button" data-sound="2">2</button>
+                    <button class="rhythm-button" data-sound="3">3</button>
+                    <button class="rhythm-button" data-sound="4">4</button>
+                </div>
+                <button id="startRhythmButton">Mulai Irama</button>
+                <button id="submitRhythmButton" style="display:none;">Submit Urutan</button>
+                <p id="game-message">Tekan "Mulai Irama" untuk mendengarkan.</p>
+                <button class="back-to-menu">Kembali ke Menu</button>
+            `;
+
+            const rhythmButtons = document.querySelectorAll('.rhythm-button');
+            const startRhythmButton = document.getElementById('startRhythmButton');
+            const submitRhythmButton = document.getElementById('submitRhythmButton');
+            const rhythmDisplay = document.getElementById('rhythm-display');
+            const gameMessage = document.getElementById('game-message');
+            const currentLevelDisplay = document.getElementById('current-level');
+            const backToMenuButton = document.querySelector('.back-to-menu');
+
+            let sequence = [];
+            let playerSequence = [];
+            let level = 1;
+            let canClick = false;
+            const soundDuration = 400;
+            const pauseDuration = 200;
+
+            const sounds = {
+                1: new Audio('https://www.soundjay.com/buttons/beep-01a.mp3'),
+                2: new Audio('https://www.soundjay.com/buttons/beep-02.mp3'),
+                3: new Audio('https://www.soundjay.com/buttons/beep-03.mp3'),
+                4: new Audio('https://www.soundjay.com/buttons/beep-04.mp3')
+            };
+
+            function generateSequence() {
+                sequence = [];
+                for (let i = 0; i < level; i++) {
+                    sequence.push(Math.floor(Math.random() * 4) + 1);
+                }
+                playerSequence = [];
+                rhythmDisplay.textContent = 'Perhatikan urutan irama...';
+                gameMessage.textContent = '';
+                currentLevelDisplay.textContent = `Level: ${level}`;
+                disableButtons();
+            }
+
+            async function playSequence() {
+                canClick = false;
+                startRhythmButton.disabled = true;
+                submitRhythmButton.style.display = 'none';
+                rhythmDisplay.textContent = 'Mendengarkan...';
+
+                for (let i = 0; i < sequence.length; i++) {
+                    const buttonNumber = sequence[i];
+                    const button = document.querySelector(`.rhythm-button[data-sound="${buttonNumber}"]`);
+
+                    sounds[buttonNumber].currentTime = 0;
+                    sounds[buttonNumber].play();
+                    button.classList.add('active');
+                    await new Promise(resolve => setTimeout(() => {
+                        button.classList.remove('active');
+                        resolve();
+                    }, soundDuration));
+                    await new Promise(resolve => setTimeout(resolve, pauseDuration));
+                }
+
+                rhythmDisplay.textContent = 'Sekarang giliran Anda!';
+                enableButtons();
+                canClick = true;
+                submitRhythmButton.style.display = 'inline-block';
+            }
+
+            function handlePlayerClick(event) {
+                if (!canClick) return;
+
+                const clickedSound = parseInt(event.target.dataset.sound);
+                playerSequence.push(clickedSound);
+
+                sounds[clickedSound].currentTime = 0;
+                sounds[clickedSound].play();
+                event.target.classList.add('active');
+                setTimeout(() => {
+                    event.target.classList.remove('active');
+                }, soundDuration / 2);
+
+                rhythmDisplay.textContent = playerSequence.join(' ');
+
+                if (playerSequence.length === sequence.length) {
+                    // check logic will happen on submit
+                }
+            }
+
+            function checkPlayerSequence() {
+                canClick = false;
+                disableButtons();
+                submitRhythmButton.style.display = 'none';
+
+                let correct = true;
+                for (let i = 0; i < sequence.length; i++) {
+                    if (playerSequence[i] !== sequence[i]) {
+                        correct = false;
+                        break;
+                    }
+                }
+
+                if (correct) {
+                    gameMessage.textContent = 'Benar! Lanjut ke level berikutnya!';
+                    level++;
+                    saveIngatIramaStats(level);
+                    setTimeout(() => {
+                        generateSequence();
+                        playSequence();
+                    }, 1500);
+                } else {
+                    gameMessage.textContent = `Salah! Anda mencapai Level ${level}. Coba lagi!`;
+                    level = 1;
+                    startRhythmButton.disabled = false;
+                }
+            }
+
+            function disableButtons() {
+                rhythmButtons.forEach(button => button.disabled = true);
+            }
+
+            function enableButtons() {
+                rhythmButtons.forEach(button => button.disabled = false);
+            }
+
+            async function saveIngatIramaStats(currentLevel) {
+                const existingStats = await getData('ingat-irama');
+                let highLevel = existingStats ? (existingStats.highLevel || 0) : 0;
+
+                if (currentLevel > highLevel) {
+                    highLevel = currentLevel;
+                }
+
+                await saveData('ingat-irama', {
+                    lastPlayed: new Date().toLocaleString(),
+                    highLevel: highLevel
+                });
+            }
+
+            // Event Listeners
+            startRhythmButton.addEventListener('click', () => {
+                generateSequence();
+                playSequence();
+            });
+
+            rhythmButtons.forEach(button => {
+                button.addEventListener('click', handlePlayerClick);
+            });
+
+            submitRhythmButton.addEventListener('click', checkPlayerSequence);
+
+            backToMenuButton.addEventListener('click', returnToMainMenu); // Menggunakan fungsi global
+
+            disableButtons();
+        }
+    </script>
+</body>
+</html>
